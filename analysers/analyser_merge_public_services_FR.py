@@ -148,17 +148,17 @@ class Analyser_Merge_ServicePublic_FR_CR(_Generic_Analyser_Merge_Public_Services
             {"office": "government", "government": "parliament"},
             {"office": "government", "government": "parliament", "admin_level": "4"})
 
-class Analyser_Merge_ServicePublic_FR_MSAP(_Generic_Analyser_Merge_Public_Services_FR_):
-    def __init__(self, config, logger = None):
-        _Generic_Analyser_Merge_Public_Services_FR_.__init__(self, config, logger, 16, "msap",
-            {"office": "government", "government": "public_service", "operator": "France Services"},
-            {"office": "government", "government": "public_service", "operator": "France Services", "operator:wikidata":"Q24931343"})
-
 class Analyser_Merge_ServicePublic_FR_CLIC(_Generic_Analyser_Merge_Public_Services_FR_):
     def __init__(self, config, logger = None):
         _Generic_Analyser_Merge_Public_Services_FR_.__init__(self, config, logger, 16, "clic",
             {"amenity": "social_facility", "social_facility:for": "senior"},
             {"amenity": "social_facility", "social_facility:for": "senior", "social_facility": "outreach"})
+
+class Analyser_Merge_ServicePublic_FR_MSAP(_Generic_Analyser_Merge_Public_Services_FR_):
+    def __init__(self, config, logger = None):
+        _Generic_Analyser_Merge_Public_Services_FR_.__init__(self, config, logger, 17, "msap",
+            {"office": "government", "government": "public_service", "operator": "France Services"},
+            {"office": "government", "government": "public_service", "operator": "France Services", "operator:wikidata":"Q24931343"})
 
 class Public_Services_Source(Source):
     def __init__(self, source):
