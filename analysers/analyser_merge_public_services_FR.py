@@ -3,7 +3,7 @@
 
 ###########################################################################
 ##                                                                       ##
-## Copyrights Noémie Lehuby 2023                                         ##
+## Copyrights Noémie Lehuby 2023-2026                                    ##
 ##                                                                       ##
 ## This program is free software: you can redistribute it and/or modify  ##
 ## it under the terms of the GNU General Public License as published by  ##
@@ -29,6 +29,12 @@ import csv
 import datetime
 import tarfile
 
+service_public_data_source = {
+    "public_url": "https://www.data.gouv.fr/fr/datasets/service-public-fr-annuaire-de-l-administration-base-de-donnees-locales/",
+    "label": "Service-Public.fr",
+    "file_url": "https://www.data.gouv.fr/fr/datasets/r/73302880-e4df-4d4c-8676-1a61bb997f3d"
+}
+
 class _Generic_Analyser_Merge_Public_Services_FR_(Analyser_Merge_Point):
     def __init__(self, config, logger, osmose_class, public_service_category, osm_select_tags, osm_default_tags):
         Analyser_Merge_Point.__init__(self, config, logger)
@@ -36,10 +42,10 @@ class _Generic_Analyser_Merge_Public_Services_FR_(Analyser_Merge_Point):
             title = T_('Public service not integrated'))
 
         self.init(
-            "https://www.data.gouv.fr/fr/datasets/service-public-fr-annuaire-de-l-administration-base-de-donnees-locales/",
-            "Service-Public.fr",
-            CSV(Public_Services_Source(Source(attribution = "Service-Public.fr",
-                    fileUrl="https://www.data.gouv.fr/fr/datasets/r/73302880-e4df-4d4c-8676-1a61bb997f3d"))),
+            service_public_data_source["public_url"],
+            service_public_data_source["label"],
+            CSV(Public_Services_Source(Source(attribution = service_public_data_source["label"],
+                    fileUrl=service_public_data_source["file_url"]))),
             Load_XY("longitude", "latitude",
                 select = {"categorie": public_service_category}),
             Conflate(
@@ -67,6 +73,41 @@ class _Generic_Analyser_Merge_Public_Services_FR_(Analyser_Merge_Point):
 class Analyser_Merge_Public_Services_Mairie(_Generic_Analyser_Merge_Public_Services_FR_):
     def __init__(self, config, logger=None):
         _Generic_Analyser_Merge_Public_Services_FR_.__init__(self, config, logger, 1, ["mairie", "mairie_com"], {"amenity": "townhall"}, {"amenity": "townhall"})
+
+
+class Analyser_Merge_Public_Services_Update_Mairie(Analyser_Merge_Point):
+    def __init__(self, config, logger=None):
+        Analyser_Merge_Point.__init__(self, config, logger)
+        self.def_class_update_official(item = 8112, id = 1, level = 3, tags = ['merge', 'fix:imagery', 'fix:survey', 'fix:picture'],
+            title = T_('Townhall update'))
+        self.init(
+            service_public_data_source["public_url"],
+            service_public_data_source["label"],
+            CSV(Public_Services_Source(Source(attribution = service_public_data_source["label"],
+                    fileUrl=service_public_data_source["file_url"]))),
+            Load_XY("longitude", "latitude",
+                select = {"categorie": ["mairie", "mairie_com"]},
+                unique = ["ref:FR:SIRET"],
+                ),
+            Conflate(
+                select = Select(
+                    types = ["nodes", "ways", "relations"],
+                    tags = {"amenity": "townhall"}),
+                osmRef = "ref:FR:SIRET",
+                mapping = Mapping(
+                    static1 = {"amenity": "townhall"},
+                    mapping1 = dict({
+                        "name": "name",
+                        "contact:email": "contact:email",
+                        "contact:website": "contact:website",
+                        "opening_hours": "opening_hours",
+                        "ref:FR:SIRET": "ref:FR:SIRET",
+                        "contact:phone":  "contact:phone"
+                    }),
+                    mapping2 = dict({
+                        "source": lambda feature: "Service-Public.fr - " + feature["millesime"]
+                    }),
+                    text = lambda tags, fields: {"en": "{0}, {1}".format(fields["official_name"], fields["address_txt"])} )))
 
 class Analyser_Merge_ServicePublic_FR_EPCI(_Generic_Analyser_Merge_Public_Services_FR_):
     def __init__(self, config, logger = None):
